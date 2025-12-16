@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       job:
-        description: 'Which job to run manually (build | self-hosted-emerald | self-hosted-spaceforge | container-emerald | container-spaceforge)'
+        description: 'Which job to run manually (build | self-hosted-emerald | self-hosted-spaceforge | container-emerald | container-spaceforge | self-hosted-diamond-carmon-lattice | container-diamond-carmon-lattice)'
         required: true
         default: 'build'
 
@@ -94,6 +94,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run tests inside container
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+          pytest -q
+
+  # Diamond Carmon Lattice: self-hosted and container variants
+  self-hosted-diamond-carmon-lattice:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'self-hosted-diamond-carmon-lattice' }}
+    name: CI on self-hosted diamond-carmon-lattice
+    runs-on: [self-hosted, diamond-carmon-lattice]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+      - name: Run tests
+        run: |
+          pytest -q
+
+  container-diamond-carmon-lattice:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'container-diamond-carmon-lattice' }}
+    name: CI in diamond-carmon-lattice container
+    runs-on: ubuntu-latest
+    container:
+      # Use the GHCR image for Space-LEAF-corp if available; update if you have a different image
+      image: ghcr.io/space-leaf-corp/diamond-carmon-lattice:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests inside diamond-carmon-lattice container
         run: |
           python -m pip install --upgrade pip
           python -m pip install pytest
