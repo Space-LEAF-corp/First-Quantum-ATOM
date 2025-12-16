@@ -5,9 +5,16 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run manually (build | self-hosted-emerald | self-hosted-spaceforge | container-emerald | container-spaceforge)'
+        required: true
+        default: 'build'
 
 jobs:
   build:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'build' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,4 +31,70 @@ jobs:
           python -m pip install pytest
       - name: Run tests
         run: |
+          pytest -q
+
+  # Self-hosted runner jobs (run only if such runners are available with the labels below)
+  self-hosted-emerald:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'self-hosted-emerald' }}
+    name: CI on self-hosted emerald
+    runs-on: [self-hosted, emerald]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+      - name: Run tests
+        run: |
+          pytest -q
+
+  self-hosted-spaceforge:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'self-hosted-spaceforge' }}
+    name: CI on self-hosted space-forge
+    runs-on: [self-hosted, space-forge]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+      - name: Run tests
+        run: |
+          pytest -q
+
+  # Docker container based jobs for image-based environments (image names assumed); these will run on ubuntu-host but execute inside the specified container
+  container-emerald:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'container-emerald' }}
+    name: CI in emerald container
+    runs-on: ubuntu-latest
+    container:
+      image: emerald:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests inside container
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+          pytest -q
+
+  container-spaceforge:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'container-spaceforge' }}
+    name: CI in spaceforge container
+    runs-on: ubuntu-latest
+    container:
+      image: spaceforge:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests inside container
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
           pytest -q
