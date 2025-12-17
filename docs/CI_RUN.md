@@ -3,6 +3,7 @@
 This guide explains how to run the CI jobs (including container and self-hosted variants) safely and how to provide temporary credentials if required.
 
 ## Jobs you can run
+
 - build (matrix: Python 3.9, 3.10, 3.11)
 - container-emerald
 - container-spaceforge
@@ -12,6 +13,7 @@ This guide explains how to run the CI jobs (including container and self-hosted 
 - self-hosted-diamond-carmon-lattice
 
 ## Option A — Create a short-lived PAT and let me dispatch
+
 1. Create a short-lived PAT (classic) with scopes:
    - `workflow`
    - `repo` (only if the repo is private)
@@ -29,19 +31,23 @@ curl -X POST \
   -d '{"ref":"main","inputs":{"job":"'$JOB'"}}'
 ```
 
-4. Revoke the PAT in GitHub after the run.
+1. Revoke the PAT in GitHub after the run.
 
 ## Option B — Run from the Actions UI (recommended, safer)
+
 1. Go to the repository `Actions` tab → select `CI` → **Run workflow**.
 2. Choose the `job` input from the dropdown (e.g., `container-diamond-carmon-lattice`) and click **Run workflow**.
 3. Copy the run URL and paste it here; I will follow logs and report the outcome.
 
 ## Option C — Private container images
+
 If a container image is private on GHCR or another registry:
+
 1. Add the registry credentials as repository secrets: `GHCR_USERNAME` and `GHCR_PAT` (or `REGISTRY_USERNAME` / `REGISTRY_PASSWORD`).
 2. The workflow contains a conditional login step that will run if `GHCR_USERNAME` and `GHCR_PAT` are present.
 
 ## What I will do after you trigger a run
+
 - Monitor logs, summarize pass/fail status, runtime, and any errors.
 - If images are missing or access is denied, I will report the exact error and remediation steps.
 
